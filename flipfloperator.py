@@ -7,21 +7,21 @@ class FL(IntEnum):
 
 class Flipfloperator:
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.flipped = FL.OPPED
 
-    def __call__(self, cond):
-        if cond:
+    def __call__(self, bool_expr: bool):
+        if bool_expr:
             self.flipped = FL.IPPED
 
         return self
 
-    def __pow__(self, other):
+    def __pow__(self, other_bool_expr: bool):
         if self.flipped == FL.OPPED:
             return False
 
         # We were flipped, now we're flopped
-        if other:
+        if other_bool_expr:
             self.flipped = FL.OPPED
 
         return True
