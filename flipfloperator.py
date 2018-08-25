@@ -20,7 +20,7 @@ class Flipfloperator:
         if self.flipped == FL.OPPED:
             return False
 
-        # We were flipped until just now
+        # We were flipped, now we're flopped
         if other:
             self.flipped = FL.OPPED
 
