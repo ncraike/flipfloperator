@@ -63,6 +63,34 @@ class TestFlipfloperatorIntegration(unittest.TestCase):
 
     def test_flip_then_flop(self):
         ff = Flipfloperator()
+        self.assertEqual(ff.flipped, FL.OPPED)
+
+        # Doesn't FLIP while first value is False
+        # Expression result should be False
+        self.assertFalse(ff(False) ** False)
+        self.assertEqual(ff.flipped, FL.OPPED)
+        self.assertFalse(ff(False) ** True)
+        self.assertEqual(ff.flipped, FL.OPPED)
+        self.assertFalse(ff(False) ** False)
+        self.assertEqual(ff.flipped, FL.OPPED)
+
+        # FLIPS when first value is True and stays flipped
+        # Now expression result is True
+        self.assertTrue(ff(True) ** False)
+        self.assertEqual(ff.flipped, FL.IPPED)
+        self.assertTrue(ff(True) ** False)
+        self.assertEqual(ff.flipped, FL.IPPED)
+        self.assertTrue(ff(False) ** False)
+        self.assertEqual(ff.flipped, FL.IPPED)
+        self.assertTrue(ff(True) ** False)
+        self.assertEqual(ff.flipped, FL.IPPED)
+
+        # FLOPS when second value is True
+        # Expression result is True on FLOP, then False
+        self.assertTrue(ff(False) ** True)
+        self.assertEqual(ff.flipped, FL.OPPED)
+        self.assertFalse(ff(False) ** True)
+
 
     def test_a_flipping_loop(self):
         """
