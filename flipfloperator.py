@@ -16,7 +16,7 @@ class Flipfloperator:
 
         return self
 
-    def __rshift__(self, other):
+    def __pow__(self, other):
         if self.flipped == FL.OPPED:
             return False
 
@@ -79,6 +79,6 @@ class TestFlipfloperatorIntegration(unittest.TestCase):
         l = []
 
         for x in range(1, 20):
-            l.append(x) if _(x == 5) >> (x == 10) else None
+            l.append(x) if _(x == 5) ** (x == 10) else None
 
         self.assertEqual(l, [5, 6, 7, 8, 9, 10])
