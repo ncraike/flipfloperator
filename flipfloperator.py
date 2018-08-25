@@ -66,16 +66,19 @@ class TestFlipfloperatorIntegration(unittest.TestCase):
 
     def test_a_flipping_loop(self):
         """
-        The equivalent of the Ruby example:
+        Test the equivalent of the Ruby example:
 
+            l = []
             (1..20).each do |x|
-                puts x if (x == 5) .. (x == 10)
+                l.push(x) if (x == 5) .. (x == 10)
             end
+            # l == [5, 6, 7, 8, 9, 10]
         """
+
         _ = Flipfloperator()
         l = []
+
         for x in range(1, 20):
-            if _(x == 5) ** (x == 10):
-                l.append(x)
+            l.append(x) if _(x == 5) ** (x == 10) else None
 
         self.assertEqual(l, [5, 6, 7, 8, 9, 10])
