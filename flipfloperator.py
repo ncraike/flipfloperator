@@ -1,96 +1,170 @@
-from enum import IntEnum
+
+
 import unittest
+from enum import IntEnum
+from functools import partial
+from typing import Callable, Optional
 
 class FL(IntEnum):
     OPPED = 0
     IPPED = 1
 
+
 class Flipfloperator:
+    state: FL
 
     def __init__(self) -> None:
-        self.flipped = FL.OPPED
+        self.state = FL.OPPED
 
-    def __call__(self, bool_expr: bool):
-        if bool_expr:
-            self.flipped = FL.IPPED
+    @property
+    def flipped(self):
+        return self.state == FL.IPPED
 
-        return self
+    @property
+    def flopped(self):
+        return self.state == FL.OPPED
 
-    def __pow__(self, other_bool_expr: bool):
-        if self.flipped == FL.OPPED:
+    def flip(self):
+        self.state = FL.IPPED
+
+    def flop(self):
+        self.state = FL.OPPED
+
+    def flipfloperate(self, left: bool, right: bool) -> bool:
+        if left:
+            self.flip()
+
+        if self.flopped:
             return False
 
-        # We were flipped, now we're flopped
-        if other_bool_expr:
-            self.flipped = FL.OPPED
+        if right:
+            self.flop()
 
         return True
 
 
-class TestFlipfloperatorConstruction(unittest.TestCase):
+class PowerSyntax:
+
+    flipfloperator: Flipfloperator
+    partial: Optional[Callable]
+
+    def __init__(self):
+        self.flipfloperator = Flipfloperator()
+        self.partial = None
+
+    def __call__(self, left: bool):
+        self.partial = partial(self.flipfloperator.flipfloperate, left)
+        return self
+
+    def __pow__(self, right: bool):
+        if self.partial is None:
+            raise ValueError("Call me with a boolean before using **!")
+
+        try:
+            return self.partial(right)
+        finally:
+            self.partial = None
+
+
+class RshiftSyntax:
+
+    flipfloperator: Flipfloperator
+    partial: Optional[Callable]
+
+    def __init__(self):
+        self.flipfloperator = Flipfloperator()
+        self.partial = None
+
+    def __call__(self, left: bool):
+        self.partial = partial(self.flipfloperator.flipfloperate, left)
+        return self
+
+    def __rshift__(self, right: bool):
+        if self.partial is None:
+            raise ValueError("Call me with a boolean before using >>!")
+
+        try:
+            return self.partial(right)
+        finally:
+            self.partial = None
+
+
+class FlipfloperatorTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.ff = Flipfloperator()
+
+    def assertFlipped(self):
+        self.assertTrue(self.ff.flipped)
+
+    def assertFlopped(self):
+        self.assertTrue(self.ff.flopped)
+
+    def tearDown(self):
+        del self.ff
+
+
+class TestConstruction(FlipfloperatorTestCase):
 
     def test_init_should_init_flopped(self):
-        ff = Flipfloperator()
-        self.assertEqual(ff.flipped, FL.OPPED)
+        self.assertFlopped()
 
 
-class TestFlipfloperatorMethodCall(unittest.TestCase):
+class TestFlip(FlipfloperatorTestCase):
 
-    def test_call_should_return_self(self):
-        ff = Flipfloperator()
-        result = ff(False)
-        self.assertIs(result, ff)
-
-    def test_call_should_flip_on_true(self):
-        ff = Flipfloperator()
-        self.assertEqual(ff.flipped, FL.OPPED)
-        ff(True)
-        self.assertEqual(ff.flipped, FL.IPPED)
-
-    def test_call_should_not_flip_on_false(self):
-        ff = Flipfloperator()
-        self.assertEqual(ff.flipped, FL.OPPED)
-        ff(False)
-        self.assertEqual(ff.flipped, FL.OPPED)
+    def test_flip(self):
+        self.ff.state = FL.OPPED
+        self.ff.flip()
+        self.assertFlipped()
 
 
-# class TestFlipfloperatorMethodPow(unittest.TestCase):
-#
-#     def test_pow_should_return_false_if_not_flipped()
+class TestFlop(FlipfloperatorTestCase):
+
+    def test_flop(self):
+        self.ff.state = FL.IPPED
+        self.ff.flop()
+        self.assertFlopped()
 
 
-class TestFlipfloperatorIntegration(unittest.TestCase):
+class IntegrationTests:
+
+    def assertFlipped(self):
+        raise NotImplementedError()
+
+    def assertFlopped(self):
+        raise NotImplementedError()
+
+    def call(self, left: bool, right: bool) -> bool:
+        raise NotImplementedError()
 
     def test_flip_then_flop(self):
-        ff = Flipfloperator()
-        self.assertEqual(ff.flipped, FL.OPPED)
+        self.assertFlopped()
 
-        # Doesn't FLIP while first value is False
-        # Expression result should be False
-        self.assertFalse(ff(False) ** False)
-        self.assertEqual(ff.flipped, FL.OPPED)
-        self.assertFalse(ff(False) ** True)
-        self.assertEqual(ff.flipped, FL.OPPED)
-        self.assertFalse(ff(False) ** False)
-        self.assertEqual(ff.flipped, FL.OPPED)
+        # Doesn't flip while left is False, should return False
+        self.assertFalse(self.call(False, False))
+        self.assertFlopped()
+        self.assertFalse(self.call(False, True))
+        self.assertFlopped()
+        self.assertFalse(self.call(False, False))
+        self.assertFlopped()
 
-        # FLIPS when first value is True and stays flipped
-        # Now expression result is True
-        self.assertTrue(ff(True) ** False)
-        self.assertEqual(ff.flipped, FL.IPPED)
-        self.assertTrue(ff(True) ** False)
-        self.assertEqual(ff.flipped, FL.IPPED)
-        self.assertTrue(ff(False) ** False)
-        self.assertEqual(ff.flipped, FL.IPPED)
-        self.assertTrue(ff(True) ** False)
-        self.assertEqual(ff.flipped, FL.IPPED)
+        # Flips when left is True, should now return True
+        self.assertTrue(self.call(True, False))
+        self.assertFlipped()
+        self.assertTrue(self.call(True, False))
+        self.assertFlipped()
 
-        # FLOPS when second value is True
-        # Expression result is True on FLOP, then False
-        self.assertTrue(ff(False) ** True)
-        self.assertEqual(ff.flipped, FL.OPPED)
-        self.assertFalse(ff(False) ** True)
+        # Stays flipped when left is False, still returns True
+        self.assertTrue(self.call(False, False))
+        self.assertFlipped()
+        self.assertTrue(self.call(True, False))
+        self.assertFlipped()
 
+        # Flops when right is True
+        # Should return True on flop, then return False
+        self.assertTrue(self.call(False, True))
+        self.assertFlopped()
+        self.assertFalse(self.call(False, True))
 
     def test_a_flipping_loop(self):
         """
@@ -103,10 +177,62 @@ class TestFlipfloperatorIntegration(unittest.TestCase):
             # l == [5, 6, 7, 8, 9, 10]
         """
 
-        _ = Flipfloperator()
         l = []
-
         for x in range(1, 20):
-            l.append(x) if _(x == 5) ** (x == 10) else None
+            if self.call(x == 5, x == 10):
+                l.append(x)
 
         self.assertEqual(l, [5, 6, 7, 8, 9, 10])
+
+class TestFlipfloperatorIntegration(unittest.TestCase, IntegrationTests):
+
+    def setUp(self):
+        self.flipfloperator = Flipfloperator()
+
+    def assertFlipped(self):
+        self.assertTrue(self.flipfloperator.flipped)
+
+    def assertFlopped(self):
+        self.assertTrue(self.flipfloperator.flopped)
+
+    def call(self, left: bool, right: bool) -> bool:
+        return self.flipfloperator.flipfloperate(left, right)
+
+    def tearDown(self):
+        del self.flipfloperator
+
+
+class TestPowerSyntaxIntegration(unittest.TestCase, IntegrationTests):
+
+    def setUp(self):
+        self.power_syntax = PowerSyntax()
+
+    def assertFlipped(self):
+        self.assertTrue(self.power_syntax.flipfloperator.flipped)
+
+    def assertFlopped(self):
+        self.assertTrue(self.power_syntax.flipfloperator.flopped)
+
+    def call(self, left: bool, right: bool) -> bool:
+        return self.power_syntax(left) ** right
+
+    def tearDown(self):
+        del self.power_syntax
+
+
+class TestRshiftSyntaxIntegration(unittest.TestCase, IntegrationTests):
+
+    def setUp(self):
+        self.rshift_syntax = RshiftSyntax()
+
+    def assertFlipped(self):
+        self.assertTrue(self.rshift_syntax.flipfloperator.flipped)
+
+    def assertFlopped(self):
+        self.assertTrue(self.rshift_syntax.flipfloperator.flopped)
+
+    def call(self, left: bool, right: bool) -> bool:
+        return self.rshift_syntax(left) >> right
+
+    def tearDown(self):
+        del self.rshift_syntax
