@@ -59,3 +59,21 @@ class TestFlipfloperatorIntegration(unittest.TestCase, IntegrationTests):
 
     def tearDown(self):
         del self.flipfloperator
+
+
+class TestFlipfloperatorCallSyntaxIntegration(unittest.TestCase, IntegrationTests):
+
+    def setUp(self):
+        self.flipfloperator = Flipfloperator()
+
+    def assertFlipped(self):
+        self.assertTrue(self.flipfloperator.flipped)
+
+    def assertFlopped(self):
+        self.assertTrue(self.flipfloperator.flopped)
+
+    def call(self, left: bool, right: bool) -> bool:
+        return self.flipfloperator(left, right)
+
+    def tearDown(self):
+        del self.flipfloperator

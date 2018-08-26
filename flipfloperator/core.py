@@ -42,3 +42,6 @@ class Flipfloperator:
             self.flop()
 
         return True
+
+    def __call__(self, left: bool, right: bool) -> bool:
+        return self.flipfloperate(left, right)
