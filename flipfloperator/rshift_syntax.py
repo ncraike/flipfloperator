@@ -1,5 +1,5 @@
 """
-Support flipfloperating with `**` syntax.
+Support flipfloperating with `>>` syntax.
 
 
 """
